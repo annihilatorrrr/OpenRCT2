@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Copyright (c) 2014-2024 OpenRCT2 developers
+ * Copyright (c) 2014-2025 OpenRCT2 developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/OpenRCT2/OpenRCT2
@@ -9,13 +9,15 @@
 
 #pragma once
 
-#include "common.h"
-#include "core/String.hpp"
+#include "core/StringTypes.h"
 
 #include <memory>
-#include <string>
 
-class Intent;
+namespace OpenRCT2
+{
+    class Intent;
+}
+
 struct ParkLoadResult;
 
 enum class GameCommand : int32_t
@@ -156,7 +158,6 @@ void GameReduceGameSpeed();
 
 void GameCreateWindows();
 void ResetAllSpriteQuadrantPlacements();
-void UpdatePaletteEffects();
 
 void GameLoadOrQuitNoSavePrompt();
 void GameLoadInit();
@@ -168,7 +169,7 @@ void PauseToggle();
 bool GameIsPaused();
 bool GameIsNotPaused();
 void SaveGame();
-std::unique_ptr<Intent> CreateSaveGameAsIntent();
+std::unique_ptr<OpenRCT2::Intent> CreateSaveGameAsIntent();
 void SaveGameAs();
 void SaveGameCmd(u8string_view name = {});
 void SaveGameWithName(u8string_view name);

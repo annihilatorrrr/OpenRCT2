@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Copyright (c) 2014-2024 OpenRCT2 developers
+ * Copyright (c) 2014-2025 OpenRCT2 developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/OpenRCT2/OpenRCT2
@@ -16,19 +16,21 @@
 #include "../object/ObjectRepository.h"
 #include "CommandLine.hpp"
 
+using namespace OpenRCT2;
+
 // clang-format off
-static constexpr CommandLineOptionDefinition NoOptions[]
+static constexpr CommandLineOptionDefinition kNoOptions[]
 {
-    OptionTableEnd
+    kOptionTableEnd
 };
 
 static exitcode_t HandleObjectsInfo(CommandLineArgEnumerator *argEnumerator);
 
-const CommandLineCommand CommandLine::ParkInfoCommands[]{
+const CommandLineCommand CommandLine::kParkInfoCommands[]{
     // Main commands
-    DefineCommand("objects", "<savefile>", NoOptions, HandleObjectsInfo),
+    DefineCommand("objects", "<savefile>", kNoOptions, HandleObjectsInfo),
 
-    CommandTableEnd
+    kCommandTableEnd
 };
 // clang-format on
 
@@ -88,37 +90,37 @@ static exitcode_t HandleObjectsInfo(CommandLineArgEnumerator* argEnumerator)
     Console::WriteLine("File contains the following objects: ");
     Console::WriteLine();
 
-    const std::array<std::string, 17> typeToName = {
+    constexpr std::array typeToName = {
         "Ride",          "SmallScenery", "LargeScenery", "Walls",           "Banners",          "Paths",
         "PathAdditions", "SceneryGroup", "ParkEntrance", "Water",           "ScenarioText",     "TerrainSurface",
         "TerrainEdge",   "Station",      "Music",        "FootpathSurface", "FootpathRailings",
     };
-    const std::array<std::string, 9> sourceGameToName = {
+    constexpr std::array sourceGameToName = {
         "Custom", "WackyWorlds", "TimeTwister", "OpenRCT2Official", "RCT1", "AddedAttractions", "LoopyLandscapes", "", "RCT2",
     };
 
     for (auto& objType : {
-             ObjectType::Ride,
-             ObjectType::SmallScenery,
-             ObjectType::LargeScenery,
-             ObjectType::Walls,
-             ObjectType::Banners,
-             ObjectType::Paths,
-             ObjectType::PathAdditions,
-             ObjectType::SceneryGroup,
-             ObjectType::ParkEntrance,
-             ObjectType::Water,
-             ObjectType::ScenarioText,
-             ObjectType::TerrainSurface,
-             ObjectType::TerrainEdge,
-             ObjectType::Station,
-             ObjectType::Music,
-             ObjectType::FootpathSurface,
-             ObjectType::FootpathRailings,
+             ObjectType::ride,
+             ObjectType::smallScenery,
+             ObjectType::largeScenery,
+             ObjectType::walls,
+             ObjectType::banners,
+             ObjectType::paths,
+             ObjectType::pathAdditions,
+             ObjectType::sceneryGroup,
+             ObjectType::parkEntrance,
+             ObjectType::water,
+             ObjectType::scenarioText,
+             ObjectType::terrainSurface,
+             ObjectType::terrainEdge,
+             ObjectType::station,
+             ObjectType::music,
+             ObjectType::footpathSurface,
+             ObjectType::footpathRailings,
          })
     {
         auto& list = loadResult.RequiredObjects.GetList(objType);
-        Console::WriteLine("ObjectType: %s, Number of Objects: %d", typeToName[EnumValue(objType)].c_str(), list.size());
+        Console::WriteLine("ObjectType: %s, Number of Objects: %d", typeToName[EnumValue(objType)], list.size());
         for (auto& obj : list)
         {
             if (obj.Generation == ObjectGeneration::JSON && obj.Identifier.size() == 0)
@@ -127,7 +129,7 @@ static exitcode_t HandleObjectsInfo(CommandLineArgEnumerator* argEnumerator)
                 continue;
             }
             auto* ori = OpenRCT2::GetContext()->GetObjectRepository().FindObject(obj);
-            Console::WriteFormat("%s Object: ", sourceGameToName[EnumValue(ori->GetFirstSourceGame())].c_str());
+            Console::WriteFormat("%s Object: ", sourceGameToName[EnumValue(ori->GetFirstSourceGame())]);
 
             std::string name{ obj.GetName() };
             if (obj.Generation == ObjectGeneration::DAT)

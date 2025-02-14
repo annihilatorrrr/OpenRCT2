@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Copyright (c) 2014-2024 OpenRCT2 developers
+ * Copyright (c) 2014-2025 OpenRCT2 developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/OpenRCT2/OpenRCT2
@@ -9,13 +9,12 @@
 
 #pragma once
 
-#include "../common.h"
-#include "../core/String.hpp"
+#include "../core/StringTypes.h"
 #include "../drawing/ImageId.hpp"
 
 #include <array>
 
-constexpr uint16_t FONT_SPRITE_GLYPH_COUNT = 224;
+constexpr uint16_t kSpriteFontGlyphCount = 224;
 
 enum class FontStyle : uint8_t
 {

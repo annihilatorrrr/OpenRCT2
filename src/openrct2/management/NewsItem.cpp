@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Copyright (c) 2014-2024 OpenRCT2 developers
+ * Copyright (c) 2014-2025 OpenRCT2 developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/OpenRCT2/OpenRCT2
@@ -10,25 +10,24 @@
 #include "NewsItem.h"
 
 #include "../Context.h"
+#include "../Diagnostic.h"
 #include "../GameState.h"
 #include "../Input.h"
 #include "../OpenRCT2.h"
 #include "../audio/audio.h"
 #include "../entity/EntityRegistry.h"
 #include "../entity/Peep.h"
-#include "../interface/Window.h"
-#include "../interface/Window_internal.h"
-#include "../localisation/Date.h"
 #include "../localisation/Formatter.h"
 #include "../localisation/Formatting.h"
-#include "../localisation/Localisation.h"
 #include "../management/Research.h"
 #include "../profiling/Profiling.h"
 #include "../ride/Ride.h"
 #include "../ride/Vehicle.h"
-#include "../util/Util.h"
+#include "../ui/WindowManager.h"
 #include "../windows/Intent.h"
 #include "../world/Location.hpp"
+
+#include <cassert>
 
 using namespace OpenRCT2;
 
@@ -112,7 +111,7 @@ void News::InitQueue()
     assert(gameState.NewsItems.IsEmpty());
 
     // Throttles for warning types (PEEP_*_WARNING)
-    for (auto& warningThrottle : gPeepWarningThrottle)
+    for (auto& warningThrottle : gameState.PeepWarningThrottle)
     {
         warningThrottle = 0;
     }
@@ -193,7 +192,8 @@ void News::ItemQueues::ArchiveCurrent()
     Archived.push_back(Current());
 
     // Invalidate the news window
-    WindowInvalidateByClass(WindowClass::RecentNews);
+    auto* windowMgr = Ui::GetWindowManager();
+    windowMgr->InvalidateByClass(WindowClass::RecentNews);
 
     // Dequeue the current news item, shift news up
     Recent.pop_front();
@@ -233,7 +233,7 @@ std::optional<CoordsXYZ> News::GetSubjectLocation(News::ItemType type, int32_t s
                 break;
 
             subjectLoc = peep->GetLocation();
-            if (subjectLoc->x != LOCATION_NULL)
+            if (subjectLoc->x != kLocationNull)
                 break;
 
             if (peep->State != PeepState::OnRide && peep->State != PeepState::EnteringRide)
@@ -455,7 +455,8 @@ void News::DisableNewsItems(News::ItemType type, uint32_t assoc)
         if (type == newsItem.Type && assoc == newsItem.Assoc)
         {
             newsItem.SetFlags(News::ItemFlags::HasButton);
-            WindowInvalidateByClass(WindowClass::RecentNews);
+            auto* windowMgr = Ui::GetWindowManager();
+            windowMgr->InvalidateByClass(WindowClass::RecentNews);
         }
     });
 }

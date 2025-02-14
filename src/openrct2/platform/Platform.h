@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Copyright (c) 2014-2024 OpenRCT2 developers
+ * Copyright (c) 2014-2025 OpenRCT2 developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/OpenRCT2/OpenRCT2
@@ -9,26 +9,31 @@
 
 #pragma once
 
-#include "../common.h"
-#include "../config/Config.h"
+#include "../config/ConfigTypes.h"
+#include "../core/DateTime.h"
+#include "../core/StringTypes.h"
 
+#include <bit>
 #include <ctime>
-#include <string>
+#include <vector>
 
 #ifdef _WIN32
-#    define PATH_SEPARATOR u8"\\"
-#    define PLATFORM_NEWLINE u8"\r\n"
+    #define PATH_SEPARATOR u8"\\"
+    #define PLATFORM_NEWLINE u8"\r\n"
 #else
-#    define PATH_SEPARATOR u8"/"
-#    define PLATFORM_NEWLINE u8"\n"
+    #define PATH_SEPARATOR u8"/"
+    #define PLATFORM_NEWLINE u8"\n"
 #endif
 #ifdef __ANDROID__
-#    include <jni.h>
+    #include <jni.h>
 #endif // __ANDROID__
 
 #ifndef MAX_PATH
-#    define MAX_PATH 260
+    #define MAX_PATH 260
 #endif
+
+static_assert(
+    std::endian::native == std::endian::little, "OpenRCT2 is known to be broken on big endian. Proceed with caution!");
 
 enum class SPECIAL_FOLDER
 {
@@ -42,8 +47,9 @@ enum class SPECIAL_FOLDER
 
 struct RealWorldDate;
 struct RealWorldTime;
+struct TTFFontDescriptor;
 
-namespace Platform
+namespace OpenRCT2::Platform
 {
     std::string GetEnvironmentVariable(std::string_view name);
     std::string GetFolderPath(SPECIAL_FOLDER folder);
@@ -80,7 +86,7 @@ namespace Platform
     std::string GetUsername();
 
     std::string GetSteamPath();
-#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__)) || defined(__FreeBSD__)
+#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__)) || defined(__FreeBSD__) || defined(__NetBSD__)
     std::string GetEnvironmentPath(const char* name);
     std::string GetHomePath();
 #endif
@@ -122,7 +128,13 @@ namespace Platform
     uint32_t GetTicks();
 
     void Sleep(uint32_t ms);
-} // namespace Platform
+
+    bool SSE41Available();
+    bool AVX2Available();
+
+    std::vector<std::string_view> GetSearchablePathsRCT1();
+    std::vector<std::string_view> GetSearchablePathsRCT2();
+} // namespace OpenRCT2::Platform
 
 #ifdef __ANDROID__
 class AndroidClassLoader
@@ -135,21 +147,3 @@ public:
 };
 
 #endif // __ANDROID__
-
-#ifdef _WIN32
-#    ifndef NOMINMAX
-#        define NOMINMAX
-#    endif
-#    ifndef WIN32_LEAN_AND_MEAN
-#        define WIN32_LEAN_AND_MEAN
-#    endif
-#    include <windows.h>
-#    undef CreateDirectory
-#    undef CreateWindow
-#    undef GetMessage
-
-// This function cannot be marked as 'static', even though it may seem to be,
-// as it requires external linkage, which 'static' prevents
-__declspec(dllexport) int32_t
-    StartOpenRCT2(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCommandLine, int32_t nCmdShow);
-#endif // _WIN32

@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Copyright (c) 2014-2024 OpenRCT2 developers
+ * Copyright (c) 2014-2025 OpenRCT2 developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/OpenRCT2/OpenRCT2
@@ -7,24 +7,76 @@
  * OpenRCT2 is licensed under the GNU General Public License version 3.
  *****************************************************************************/
 
+#include "ObjectTypes.h"
+
+#include "../core/EnumUtils.hpp"
 #include "Object.h"
 
 #include <algorithm>
 
+constexpr std::array kAllObjectTypes = {
+    ObjectType::ride,
+    ObjectType::smallScenery,
+    ObjectType::largeScenery,
+    ObjectType::walls,
+    ObjectType::banners,
+    ObjectType::paths,
+    ObjectType::pathAdditions,
+    ObjectType::sceneryGroup,
+    ObjectType::parkEntrance,
+    ObjectType::water,
+    ObjectType::scenarioText,
+    ObjectType::terrainSurface,
+    ObjectType::terrainEdge,
+    ObjectType::station,
+    ObjectType::music,
+    ObjectType::footpathSurface,
+    ObjectType::footpathRailings,
+    ObjectType::audio,
+    ObjectType::peepNames,
+    ObjectType::peepAnimations,
+};
+
+static_assert(kAllObjectTypes.size() == EnumValue(ObjectType::count));
+
+// Object types that can be saved in a park file.
+static constexpr std::array<const ObjectType, kNumTransientObjectTypes> kTransientObjectTypes = {
+    ObjectType::ride,         ObjectType::smallScenery,   ObjectType::largeScenery,    ObjectType::walls,
+    ObjectType::banners,      ObjectType::paths,          ObjectType::pathAdditions,   ObjectType::sceneryGroup,
+    ObjectType::parkEntrance, ObjectType::water,          ObjectType::terrainSurface,  ObjectType::terrainEdge,
+    ObjectType::station,      ObjectType::music,          ObjectType::footpathSurface, ObjectType::footpathRailings,
+    ObjectType::peepNames,    ObjectType::peepAnimations,
+};
+
+// Object types that cannot be saved in a park file.
+static constexpr std::array<const ObjectType, kNumIntransientObjectTypes> kIntransientObjectTypes = {
+    ObjectType::scenarioText,
+    ObjectType::audio,
+};
+
+static_assert(kNumTransientObjectTypes + kNumIntransientObjectTypes == static_cast<size_t>(ObjectType::count));
+
 bool ObjectTypeIsTransient(ObjectType type)
 {
-    return std::find(TransientObjectTypes.begin(), TransientObjectTypes.end(), type) != std::end(TransientObjectTypes);
+    return std::find(kTransientObjectTypes.begin(), kTransientObjectTypes.end(), type) != std::end(kTransientObjectTypes);
 }
 
 bool ObjectTypeIsIntransient(ObjectType type)
 {
-    return std::find(IntransientObjectTypes.begin(), IntransientObjectTypes.end(), type) != std::end(IntransientObjectTypes);
+    return std::find(kIntransientObjectTypes.begin(), kIntransientObjectTypes.end(), type) != std::end(kIntransientObjectTypes);
 }
 
-size_t GetObjectTypeLimit(ObjectType type)
+std::span<const ObjectType> getAllObjectTypes()
 {
-    auto index = EnumValue(type);
-    if (index >= EnumValue(ObjectType::Count))
-        return 0;
-    return static_cast<size_t>(object_entry_group_counts[index]);
+    return kAllObjectTypes;
+}
+
+std::span<const ObjectType> getTransientObjectTypes()
+{
+    return kTransientObjectTypes;
+}
+
+std::span<const ObjectType> getIntransientObjectTypes()
+{
+    return kIntransientObjectTypes;
 }

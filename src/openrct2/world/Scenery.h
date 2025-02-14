@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Copyright (c) 2014-2024 OpenRCT2 developers
+ * Copyright (c) 2014-2025 OpenRCT2 developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/OpenRCT2/OpenRCT2
@@ -9,14 +9,14 @@
 
 #pragma once
 
-#include "../common.h"
+#include "../core/Money.hpp"
 #include "Location.hpp"
 #include "ScenerySelection.h"
 
 #include <vector>
 
-#define SCENERY_WITHER_AGE_THRESHOLD_1 0x28
-#define SCENERY_WITHER_AGE_THRESHOLD_2 0x37
+constexpr uint8_t kSceneryWitherAgeThreshold1 = 0x28;
+constexpr uint8_t kSceneryWitherAgeThreshold2 = 0x37;
 
 enum
 {
@@ -66,16 +66,8 @@ extern int16_t gSceneryCtrlPressZ;
 
 extern const CoordsXY SceneryQuadrantOffsets[];
 
-extern money64 gClearSceneryCost;
-
-void SceneryInit();
 void SceneryUpdateTile(const CoordsXY& sceneryPos);
-void ScenerySetDefaultPlacementConfiguration();
 void SceneryRemoveGhostToolPlacement();
-
-struct WallSceneryEntry;
-
-int32_t WallEntryGetDoorSound(const WallSceneryEntry* wallEntry);
 
 bool IsSceneryAvailableToBuild(const ScenerySelection& item);
 

@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Copyright (c) 2014-2024 OpenRCT2 developers
+ * Copyright (c) 2014-2025 OpenRCT2 developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/OpenRCT2/OpenRCT2
@@ -9,9 +9,12 @@
 
 #include "StaffFireAction.h"
 
+#include "../Diagnostic.h"
 #include "../entity/EntityRegistry.h"
 #include "../entity/Staff.h"
-#include "../interface/Window.h"
+#include "../ui/WindowManager.h"
+
+using namespace OpenRCT2;
 
 StaffFireAction::StaffFireAction(EntityId spriteId)
     : _spriteId(spriteId)
@@ -36,9 +39,9 @@ void StaffFireAction::Serialise(DataSerialiser& stream)
 
 GameActions::Result StaffFireAction::Query() const
 {
-    if (_spriteId.ToUnderlying() >= MAX_ENTITIES || _spriteId.IsNull())
+    if (_spriteId.ToUnderlying() >= kMaxEntities || _spriteId.IsNull())
     {
-        LOG_ERROR("Invalid spriteId. spriteId = %u", _spriteId);
+        LOG_ERROR("Invalid spriteId %u", _spriteId);
         return GameActions::Result(
             GameActions::Status::InvalidParameters, STR_ERR_INVALID_PARAMETER, STR_ERR_VALUE_OUT_OF_RANGE);
     }
@@ -46,17 +49,17 @@ GameActions::Result StaffFireAction::Query() const
     auto staff = TryGetEntity<Staff>(_spriteId);
     if (staff == nullptr)
     {
-        LOG_ERROR("Invalid spriteId. spriteId = %u", _spriteId);
+        LOG_ERROR("Staff entity not found for spriteId %u", _spriteId);
         return GameActions::Result(GameActions::Status::InvalidParameters, STR_ERR_INVALID_PARAMETER, STR_ERR_STAFF_NOT_FOUND);
     }
 
     if (staff->State == PeepState::Fixing)
     {
-        return GameActions::Result(GameActions::Status::Disallowed, STR_CANT_FIRE_STAFF_FIXING, STR_NONE);
+        return GameActions::Result(GameActions::Status::Disallowed, STR_CANT_FIRE_STAFF_FIXING, kStringIdNone);
     }
     else if (staff->State == PeepState::Inspecting)
     {
-        return GameActions::Result(GameActions::Status::Disallowed, STR_CANT_FIRE_STAFF_INSPECTING, STR_NONE);
+        return GameActions::Result(GameActions::Status::Disallowed, STR_CANT_FIRE_STAFF_INSPECTING, kStringIdNone);
     }
 
     return GameActions::Result();
@@ -67,12 +70,16 @@ GameActions::Result StaffFireAction::Execute() const
     auto staff = TryGetEntity<Staff>(_spriteId);
     if (staff == nullptr)
     {
-        LOG_ERROR("Invalid spriteId. spriteId = %u", _spriteId);
+        LOG_ERROR("Staff entity not found for spriteId %u", _spriteId);
         return GameActions::Result(GameActions::Status::InvalidParameters, STR_ERR_INVALID_PARAMETER, STR_ERR_STAFF_NOT_FOUND);
     }
-    WindowCloseByClass(WindowClass::FirePrompt);
+
+    auto* windowMgr = Ui::GetWindowManager();
+    windowMgr->CloseByClass(WindowClass::FirePrompt);
+
     PeepEntityRemove(staff);
     // Due to patrol areas best to invalidate the whole screen on removal of staff
     GfxInvalidateScreen();
+
     return GameActions::Result();
 }

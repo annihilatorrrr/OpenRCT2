@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Copyright (c) 2014-2024 OpenRCT2 developers
+ * Copyright (c) 2014-2025 OpenRCT2 developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/OpenRCT2/OpenRCT2
@@ -9,7 +9,10 @@
 
 #include "ObjectFactory.h"
 
+#include "../Context.h"
+#include "../Diagnostic.h"
 #include "../OpenRCT2.h"
+#include "../PlatformEnvironment.h"
 #include "../audio/audio.h"
 #include "../core/Console.hpp"
 #include "../core/File.h"
@@ -33,7 +36,10 @@
 #include "ObjectLimits.h"
 #include "ObjectList.h"
 #include "PathAdditionObject.h"
+#include "PeepAnimationsObject.h"
+#include "PeepNamesObject.h"
 #include "RideObject.h"
+#include "ScenarioTextObject.h"
 #include "SceneryGroupObject.h"
 #include "SmallSceneryObject.h"
 #include "StationObject.h"
@@ -42,15 +48,16 @@
 #include "WallObject.h"
 #include "WaterObject.h"
 
-#include <algorithm>
 #include <memory>
 #include <unordered_map>
+
+using namespace OpenRCT2;
 
 struct IFileDataRetriever
 {
     virtual ~IFileDataRetriever() = default;
-    virtual std::vector<uint8_t> GetData(std::string_view path) const abstract;
-    virtual ObjectAsset GetAsset(std::string_view path) const abstract;
+    virtual std::vector<uint8_t> GetData(std::string_view path) const = 0;
+    virtual ObjectAsset GetAsset(std::string_view path) const = 0;
 };
 
 class FileSystemDataRetriever : public IFileDataRetriever
@@ -182,7 +189,7 @@ public:
     {
         _wasVerbose = true;
 
-        if (!String::IsNullOrEmpty(text))
+        if (!String::isNullOrEmpty(text))
         {
             LOG_VERBOSE("[%s] Info (%d): %s", _identifier.c_str(), code, text);
         }
@@ -192,7 +199,7 @@ public:
     {
         _wasWarning = true;
 
-        if (!String::IsNullOrEmpty(text))
+        if (!String::isNullOrEmpty(text))
         {
             Console::Error::WriteLine("[%s] Warning (%d): %s", _identifier.c_str(), code, text);
         }
@@ -202,14 +209,14 @@ public:
     {
         _wasError = true;
 
-        if (!String::IsNullOrEmpty(text))
+        if (!String::isNullOrEmpty(text))
         {
             Console::Error::WriteLine("[%s] Error (%d): %s", _identifier.c_str(), code, text);
         }
     }
 };
 
-namespace ObjectFactory
+namespace OpenRCT2::ObjectFactory
 {
     /**
      * @param jRoot Must be JSON node of type object
@@ -263,12 +270,12 @@ namespace ObjectFactory
 
             RCTObjectEntry entry = fs.ReadValue<RCTObjectEntry>();
 
-            if (entry.GetType() != ObjectType::ScenarioText)
+            if (entry.GetType() != ObjectType::scenarioText)
             {
                 result = CreateObject(entry.GetType());
                 result->SetDescriptor(ObjectEntryDescriptor(entry));
 
-                utf8 objectName[DAT_NAME_LENGTH + 1] = { 0 };
+                utf8 objectName[kDatNameLength + 1] = { 0 };
                 ObjectEntryGetNameFixed(objectName, sizeof(objectName), &entry);
                 LOG_VERBOSE("  entry: { 0x%08X, \"%s\", 0x%08X }", entry.flags, objectName, entry.checksum);
 
@@ -303,7 +310,7 @@ namespace ObjectFactory
         {
             result->SetDescriptor(ObjectEntryDescriptor(*entry));
 
-            utf8 objectName[DAT_NAME_LENGTH + 1];
+            utf8 objectName[kDatNameLength + 1];
             ObjectEntryGetNameFixed(objectName, sizeof(objectName), entry);
 
             auto readContext = ReadObjectContext(objectRepository, objectName, !gOpenRCT2NoGraphics, nullptr);
@@ -327,58 +334,65 @@ namespace ObjectFactory
         std::unique_ptr<Object> result;
         switch (type)
         {
-            case ObjectType::Ride:
+            case ObjectType::ride:
                 result = std::make_unique<RideObject>();
                 break;
-            case ObjectType::SmallScenery:
+            case ObjectType::smallScenery:
                 result = std::make_unique<SmallSceneryObject>();
                 break;
-            case ObjectType::LargeScenery:
+            case ObjectType::largeScenery:
                 result = std::make_unique<LargeSceneryObject>();
                 break;
-            case ObjectType::Walls:
+            case ObjectType::walls:
                 result = std::make_unique<WallObject>();
                 break;
-            case ObjectType::Banners:
+            case ObjectType::banners:
                 result = std::make_unique<BannerObject>();
                 break;
-            case ObjectType::Paths:
+            case ObjectType::paths:
                 result = std::make_unique<FootpathObject>();
                 break;
-            case ObjectType::PathAdditions:
+            case ObjectType::pathAdditions:
                 result = std::make_unique<PathAdditionObject>();
                 break;
-            case ObjectType::SceneryGroup:
+            case ObjectType::sceneryGroup:
                 result = std::make_unique<SceneryGroupObject>();
                 break;
-            case ObjectType::ParkEntrance:
+            case ObjectType::parkEntrance:
                 result = std::make_unique<EntranceObject>();
                 break;
-            case ObjectType::Water:
+            case ObjectType::water:
                 result = std::make_unique<WaterObject>();
                 break;
-            case ObjectType::ScenarioText:
+            case ObjectType::scenarioText:
+                result = std::make_unique<ScenarioTextObject>();
                 break;
-            case ObjectType::TerrainSurface:
+            case ObjectType::terrainSurface:
                 result = std::make_unique<TerrainSurfaceObject>();
                 break;
-            case ObjectType::TerrainEdge:
+            case ObjectType::terrainEdge:
                 result = std::make_unique<TerrainEdgeObject>();
                 break;
-            case ObjectType::Station:
+            case ObjectType::station:
                 result = std::make_unique<StationObject>();
                 break;
-            case ObjectType::Music:
+            case ObjectType::music:
                 result = std::make_unique<MusicObject>();
                 break;
-            case ObjectType::FootpathSurface:
+            case ObjectType::footpathSurface:
                 result = std::make_unique<FootpathSurfaceObject>();
                 break;
-            case ObjectType::FootpathRailings:
+            case ObjectType::footpathRailings:
                 result = std::make_unique<FootpathRailingsObject>();
                 break;
-            case ObjectType::Audio:
+            case ObjectType::audio:
                 result = std::make_unique<AudioObject>();
+                break;
+            case ObjectType::peepNames:
+                result = std::make_unique<PeepNamesObject>();
+                break;
+            case ObjectType::peepAnimations:
+                result = std::make_unique<PeepAnimationsObject>();
                 break;
             default:
                 throw std::runtime_error("Invalid object type");
@@ -389,38 +403,44 @@ namespace ObjectFactory
     static ObjectType ParseObjectType(const std::string& s)
     {
         if (s == "ride")
-            return ObjectType::Ride;
+            return ObjectType::ride;
         if (s == "footpath_banner")
-            return ObjectType::Banners;
+            return ObjectType::banners;
         if (s == "footpath_item")
-            return ObjectType::PathAdditions;
+            return ObjectType::pathAdditions;
         if (s == "scenery_small")
-            return ObjectType::SmallScenery;
+            return ObjectType::smallScenery;
         if (s == "scenery_large")
-            return ObjectType::LargeScenery;
+            return ObjectType::largeScenery;
         if (s == "scenery_wall")
-            return ObjectType::Walls;
+            return ObjectType::walls;
         if (s == "scenery_group")
-            return ObjectType::SceneryGroup;
+            return ObjectType::sceneryGroup;
         if (s == "park_entrance")
-            return ObjectType::ParkEntrance;
+            return ObjectType::parkEntrance;
         if (s == "water")
-            return ObjectType::Water;
+            return ObjectType::water;
+        if (s == "scenario_text")
+            return ObjectType::scenarioText;
         if (s == "terrain_surface")
-            return ObjectType::TerrainSurface;
+            return ObjectType::terrainSurface;
         if (s == "terrain_edge")
-            return ObjectType::TerrainEdge;
+            return ObjectType::terrainEdge;
         if (s == "station")
-            return ObjectType::Station;
+            return ObjectType::station;
         if (s == "music")
-            return ObjectType::Music;
+            return ObjectType::music;
         if (s == "footpath_surface")
-            return ObjectType::FootpathSurface;
+            return ObjectType::footpathSurface;
         if (s == "footpath_railings")
-            return ObjectType::FootpathRailings;
+            return ObjectType::footpathRailings;
         if (s == "audio")
-            return ObjectType::Audio;
-        return ObjectType::None;
+            return ObjectType::audio;
+        if (s == "peep_names")
+            return ObjectType::peepNames;
+        if (s == "peep_animations")
+            return ObjectType::peepAnimations;
+        return ObjectType::none;
     }
 
     std::unique_ptr<Object> CreateObjectFromZipFile(IObjectRepository& objectRepository, std::string_view path, bool loadImages)
@@ -500,6 +520,12 @@ namespace ObjectFactory
         }
     }
 
+    static bool isUsingClassic()
+    {
+        auto env = OpenRCT2::GetContext()->GetPlatformEnvironment();
+        return env->IsUsingClassic();
+    }
+
     std::unique_ptr<Object> CreateObjectFromJson(
         IObjectRepository& objectRepository, json_t& jRoot, const IFileDataRetriever* fileRetriever, bool loadImageTable)
     {
@@ -513,13 +539,17 @@ namespace ObjectFactory
         std::unique_ptr<Object> result;
 
         auto objectType = ParseObjectType(Json::GetString(jRoot["objectType"]));
-        if (objectType != ObjectType::None)
+        if (objectType != ObjectType::none)
         {
             auto id = Json::GetString(jRoot["id"]);
 
-            // HACK Disguise RCT Classic audio as RCT2 audio so asset packs override correctly
-            if (id == OpenRCT2::Audio::AudioObjectIdentifiers::RCTCBase)
-                id = OpenRCT2::Audio::AudioObjectIdentifiers::RCT2Base;
+            // Base audio files are renamed to a common, virtual name so asset packs can override it correctly.
+            const bool isRCT2BaseAudio = id == OpenRCT2::Audio::AudioObjectIdentifiers::kRCT2Base && !isUsingClassic();
+            const bool isRCTCBaseAudio = id == OpenRCT2::Audio::AudioObjectIdentifiers::kRCTCBase && isUsingClassic();
+            if (isRCT2BaseAudio || isRCTCBaseAudio)
+            {
+                id = OpenRCT2::Audio::AudioObjectIdentifiers::kRCT2;
+            }
 
             auto version = VersionTuple(Json::GetString(jRoot["version"]));
             ObjectEntryDescriptor descriptor;
@@ -579,4 +609,4 @@ namespace ObjectFactory
         }
         return result;
     }
-} // namespace ObjectFactory
+} // namespace OpenRCT2::ObjectFactory

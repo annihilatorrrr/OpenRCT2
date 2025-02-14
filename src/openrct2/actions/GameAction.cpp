@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Copyright (c) 2014-2024 OpenRCT2 developers
+ * Copyright (c) 2014-2025 OpenRCT2 developers
  *
  * For a complete list of all authors, please refer to contributors.md
  * Interested in contributing? Visit https://github.com/OpenRCT2/OpenRCT2
@@ -10,6 +10,7 @@
 #include "GameAction.h"
 
 #include "../Context.h"
+#include "../Diagnostic.h"
 #include "../GameState.h"
 #include "../ReplayManager.h"
 #include "../core/Guard.hpp"
@@ -17,7 +18,6 @@
 #include "../core/MemoryStream.h"
 #include "../entity/MoneyEffect.h"
 #include "../localisation/Formatter.h"
-#include "../localisation/Localisation.h"
 #include "../network/network.h"
 #include "../platform/Platform.h"
 #include "../profiling/Profiling.h"
@@ -25,17 +25,15 @@
 #include "../scripting/Duktape.hpp"
 #include "../scripting/HookEngine.h"
 #include "../scripting/ScriptEngine.h"
-#include "../ui/UiContext.h"
 #include "../ui/WindowManager.h"
 #include "../world/Park.h"
 #include "../world/Scenery.h"
 
-#include <algorithm>
 #include <iterator>
 
 using namespace OpenRCT2;
 
-namespace GameActions
+namespace OpenRCT2::GameActions
 {
     struct QueuedGameAction
     {
@@ -184,7 +182,7 @@ namespace GameActions
     {
         if (gGamePaused == 0)
             return true;
-        if (gCheatsBuildInPauseMode)
+        if (GetGameState().Cheats.buildInPauseMode)
             return true;
         if (actionFlags & GameActions::Flags::AllowWhilePaused)
             return true;
@@ -422,7 +420,7 @@ namespace GameActions
             }
 
             // Allow autosave to commence
-            if (gLastAutoSaveUpdate == AUTOSAVE_PAUSE)
+            if (gLastAutoSaveUpdate == kAutosavePause)
             {
                 gLastAutoSaveUpdate = Platform::GetTicks();
             }
@@ -452,7 +450,7 @@ namespace GameActions
 
         if (result.Error != GameActions::Status::Ok && shouldShowError)
         {
-            auto windowManager = GetContext()->GetUiContext()->GetWindowManager();
+            auto windowManager = Ui::GetWindowManager();
             windowManager->ShowError(result.GetErrorTitle(), result.GetErrorMessage());
         }
 
@@ -468,7 +466,7 @@ namespace GameActions
     {
         return ExecuteInternal(action, false);
     }
-} // namespace GameActions
+} // namespace OpenRCT2::GameActions
 
 const char* GameAction::GetName() const
 {
