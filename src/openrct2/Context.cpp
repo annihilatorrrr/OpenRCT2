@@ -47,6 +47,7 @@
 #include "drawing/IDrawingEngine.h"
 #include "drawing/Image.h"
 #include "drawing/LightFX.h"
+#include "drawing/Palette.h"
 #include "drawing/PickupPeep.h"
 #include "entity/EntityTweener.h"
 #include "entity/PatrolArea.h"
@@ -1390,7 +1391,7 @@ namespace OpenRCT2
 
             if (GameIsNotPaused())
             {
-                gPaletteEffectFrame += gCurrentDeltaTime;
+                Drawing::gPaletteEffectFrame += gCurrentDeltaTime;
             }
 
             DateUpdateRealTimeOfDay();

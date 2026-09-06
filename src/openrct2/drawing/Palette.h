@@ -9,18 +9,22 @@
 
 #pragma once
 
+#include "ImageIndexType.h"
 #include "PaletteType.h"
 
 #include <cstdint>
+#include <span>
 
 namespace OpenRCT2::Drawing
 {
     enum class PaletteIndex : uint8_t;
-    using BlendColourMapType = std::array<std::array<PaletteIndex, kGamePaletteSize>, kGamePaletteSize>;
 
-    BlendColourMapType* GetBlendColourMap();
+    extern GamePalette gPalette;
+    extern GamePalette gGamePalette;
+    extern uint32_t gPaletteEffectFrame;
 
-#ifndef DISABLE_TTF
-    PaletteIndex BlendColours(PaletteIndex paletteIndex1, PaletteIndex paletteIndex2);
-#endif
+    void UpdatePalette(std::span<const BGRAColour> palette, PaletteIndex startIndex, int32_t numColours);
+    void UpdatePaletteEffects();
+    void GfxTransposePalette(ImageIndex pal, uint8_t product);
+    void LoadPalette();
 } // namespace OpenRCT2::Drawing
