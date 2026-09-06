@@ -28,7 +28,7 @@
 #include "core/FileSystem.hpp"
 #include "core/Path.hpp"
 #include "core/String.hpp"
-#include "drawing/Drawing.h"
+#include "drawing/Palette.h"
 #include "drawing/ScrollingText.h"
 #include "entity/EntityList.h"
 #include "entity/EntityRegistry.h"
@@ -374,7 +374,7 @@ void GameLoadInit()
     gWindowUpdateTicks = 0;
     gCurrentRealTimeTicks = 0;
 
-    LoadPalette();
+    Drawing::LoadPalette();
 
     if (!gOpenRCT2Headless)
     {

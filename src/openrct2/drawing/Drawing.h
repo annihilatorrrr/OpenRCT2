@@ -13,10 +13,8 @@
 #include "Colour.h"
 #include "ImageId.hpp"
 #include "PaletteMap.h"
-#include "PaletteType.h"
 
 #include <optional>
-#include <span>
 
 struct ScreenCoordsXY;
 struct ScreenLine;
@@ -43,10 +41,6 @@ namespace OpenRCT2::Drawing
 
 constexpr uint8_t kPaletteTotalOffsets = 192;
 
-extern OpenRCT2::Drawing::GamePalette gPalette;
-extern OpenRCT2::Drawing::GamePalette gGamePalette;
-extern uint32_t gPaletteEffectFrame;
-
 extern const OpenRCT2::Drawing::TranslucentWindowPalette kTranslucentWindowPalettes[OpenRCT2::Drawing::kColourNumTotal];
 
 extern bool gPaintForceRedraw;
@@ -56,10 +50,6 @@ bool ClipRenderTarget(
     int32_t height);
 void GfxSetDirtyBlocks(const ScreenRect& rect);
 void GfxInvalidateScreen();
-
-// palette
-void GfxTransposePalette(ImageIndex pal, uint8_t product);
-void LoadPalette();
 
 // other
 void GfxClear(OpenRCT2::Drawing::RenderTarget& rt, OpenRCT2::Drawing::PaletteIndex paletteIndex);
@@ -85,9 +75,6 @@ void FASTCALL GfxDrawSpriteRawMasked(
 
 std::optional<uint32_t> GetPaletteG1Index(OpenRCT2::Drawing::FilterPaletteID paletteId);
 std::optional<OpenRCT2::Drawing::PaletteMap> GetPaletteMapForColour(OpenRCT2::Drawing::FilterPaletteID paletteId);
-void UpdatePalette(
-    std::span<const OpenRCT2::Drawing::BGRAColour> palette, OpenRCT2::Drawing::PaletteIndex startIndex, int32_t numColours);
-void UpdatePaletteEffects();
 
 void RefreshVideo();
 void ToggleWindowedMode();
